@@ -32,11 +32,7 @@ request: Member
 response is NOTFOUND if ID not found; or OK and updated Member
 *NOTE:* The update is not allowed to change the Member's Household!
 
-## URL = "/Members/drop"
-Cannot drop Members. 
-response is BADREQUEST
-
-## URL = "/Households/create"
+## URL = "api/Households?op=create"
 method POST
 request: HouseholdDocument object with blank id
 response: new document ID
@@ -57,7 +53,7 @@ method POST
 request: HouseholdDocument
 response is NOTFOUND if ID not found; or OK or updated HouseholdDocument
 
-## URL = "/Households/drop"
-method POST
+## URL = "api/Households?op=drop"
+method DELETE
 request: empty (ignored)
 response is OK

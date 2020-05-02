@@ -1,5 +1,6 @@
 from households_handler import HouseholdsHandler
 from members_handler import MembersHandler
+from default_handler import DefaultHandler
 from file_handler import FileHandler
 import os
 import sys
@@ -50,7 +51,11 @@ def mk_app(prefix=''):
         (r"/api/Members", MembersHandler),
         (r"/api/Households", HouseholdsHandler)
     ]
-    settings = dict(debug=True, url='localhost', port=27017)
+    settings = dict(
+        debug=True,
+        url='localhost',
+        port=27017,
+        default_handler_class=DefaultHandler)
     application = PMServer(handlers, **settings)
     return application
 
