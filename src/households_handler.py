@@ -84,27 +84,27 @@ class HouseholdsHandler(BaseHandler):
 
     def handle_read_all(self):
         """Read all or only active Households, depending on 'scope' parameter."""
-        pass
-        # if scope == 'all':
-        #     self.logger.debug('Get All Members')
-        # elif scope == 'active':
-        #     self.logger.debug('Get Active Members')
-        # else:
-        #     err_msg = 'Invalid scope parameter: %s' % scope
-        #     self.logger.error(err_msg)
-        #     self.set_status(400)
-        #     self.write(err_msg)
-        #     return
-        # client = self.application.mongo
-        # query = {}
-        # if scope == 'active':
-        #     query = {"$or": [
-        #         {"status": "COMMUNING"},
-        #         {"status": "NONCOMMUNING"}
-        #     ]}
-        # data = client.PeriMeleon['Members'].find(query)
-        # data = list(data)
-        # self.logger.info('%d records found' % len(data))
+        try:
+            scope = self.get_query_argument("scope")
+        except tornado.web.MissingArgumentError:
+            scope = "invalid"
+        if not (scope == "all" or scope == "active"):
+            err_msg = 'Invalid scope parameter: %s' % scope
+            self.logger.error(err_msg)
+            self.set_status(400)
+            self.write(err_msg)
+            return
+        self.logger.debug(f"handle_read_all scope: {scope}")
+        collection = self.application.mongo[db_name][collection_name]
+        query = {
+            "_Household__head._Member__is_active": True} if scope == 'active' else {}
+        household_json_objs = []
+        for h in collection.find(query):
+            # pp.pprint(h)
+            household_obj = Household.make_from_mongo_dict(h)
+            household_json_objs.append(json.loads(household_obj.clean_json))
+        self.set_status(200)
+        self.write(json.dumps(household_json_objs))
 
     def handle_update(self):
         """Update Household with new value provided."""
