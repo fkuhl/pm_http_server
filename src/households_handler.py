@@ -18,53 +18,43 @@ class HouseholdsHandler(BaseHandler):
         super().__init__(*args, **kwargs)
         self.req_tag = str(uuid.uuid4())[-4:]
         self.logger = logging.getLogger('HandlerLogger')
-        self.get_handler_table = {
-            "read": self.handle_read,
-            "read_all": self.handle_read_all
-        }
-        self.post_handler_table = {
-            "create": self.handle_create,
-        }
-        self.delete_handler_table = {
-            "drop": self.handle_drop,
-        }
 
     def get(self):
-        self.dispatch(self.get_handler_table)
-
-    def post(self):
-        self.dispatch(self.post_handler_table)
-
-    def delete(self):
-        self.dispatch(self.delete_handler_table)
-
-    def dispatch(self, handler_table):
         try:
-            op = self.get_argument("op")
-            self.logger.info(f"{self.req_tag}: HH got op {op}")
-            handler_table[op]()
-            return
-        except KeyError:
-            error_message = f"unrecognized operation: {op}"
-            self.logger.warning(f"{self.req_tag}: {error_message}")
-            self.set_status(400)
-            self.write(error_message)
-            return
+            id = self.get_query_argument("id")
+            self.handle_read(id)
+        except tornado.web.MissingArgumentError:
+            self.handle_read_all()
         except Exception as e:
             self.logger.error(f"{self.req_tag}: exc: {e}", exc_info=True)
-            # self.set_status(500)
             self.write_error(500, message=f"exc: {e}")
 
-    def handle_drop(self):
-        self.logger.info(f"{self.req_tag}: about to drop")
-        collection = self.application.mongo[db_name][collection_name]
-        collection.drop()
-        self.logger.info(f"{self.req_tag}: drop succeeded")
-        self.set_status(200)
-        self.write("")
-        return
+    def put(self):
+        try:
+            self.handle_update()
+        except Exception as e:
+            self.logger.error(f"{self.req_tag}: exc: {e}", exc_info=True)
+            self.write_error(500, message=f"exc: {e}")
+
+    def post(self):
+        try:
+            self.handle_create()
+        except Exception as e:
+            self.logger.error(f"{self.req_tag}: exc: {e}", exc_info=True)
+            self.write_error(500, message=f"exc: {e}")
+
+    def delete(self):
+        try:
+            id = self.get_query_argument("id")
+            self.handle_delete(id)
+        except tornado.web.MissingArgumentError:
+            self.handle_drop()
+        except Exception as e:
+            self.logger.error(f"{self.req_tag}: exc: {e}", exc_info=True)
+            self.write_error(500, message=f"exc: {e}")
 
     def handle_create(self):
+        """Create new Household from request body. Return new id."""
         self.logger.info(f"{self.req_tag}: about to create")
         try:
             clean_dict = self.request.body.decode('utf-8')
@@ -88,10 +78,12 @@ class HouseholdsHandler(BaseHandler):
         self.write(id_as_str)
         return
 
-    def handle_read(self):
+    def handle_read(self, id):
+        """Read Household with id given as query parameter."""
         pass
 
     def handle_read_all(self):
+        """Read all or only active Households, depending on 'scope' parameter."""
         pass
         # if scope == 'all':
         #     self.logger.debug('Get All Members')
@@ -113,3 +105,23 @@ class HouseholdsHandler(BaseHandler):
         # data = client.PeriMeleon['Members'].find(query)
         # data = list(data)
         # self.logger.info('%d records found' % len(data))
+
+    def handle_update(self):
+        """Update Household with new value provided."""
+        # Decode new value from request body
+        # Return status indicates success
+        pass
+
+    def handle_drop(self):
+        """Drop entire Households collection. Not recommended"""
+        self.logger.info(f"{self.req_tag}: about to drop")
+        collection = self.application.mongo[db_name][collection_name]
+        collection.drop()
+        self.logger.info(f"{self.req_tag}: drop succeeded")
+        self.set_status(200)
+        self.write("")
+        return
+
+    def handle_delete(self, id):
+        """Delete Household specified by id."""
+        pass

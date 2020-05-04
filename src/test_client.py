@@ -41,28 +41,29 @@ def do_bad_url():
         print(f"do_bad_url: resp: {response.body.decode('utf-8')}")
 
 
-def do_bad_op():
-    http_client = HTTPClient()
-    try:
-        response = http_client.fetch(
-            "http://localhost:8000/api/Households?op=loco")
-    except HTTPClientError as e:
-        message = e.response.body.decode('utf-8') if e.response else "<none>"
-        print(f"Error on bad op, code: {e.code} msg: {message}")
-    else:
-        print(f"do_bad_op: resp: {response.body.decode('utf-8')}")
+# def do_bad_op():
+#     http_client = HTTPClient()
+#     try:
+#         response = http_client.fetch(
+#             "http://localhost:8000/api/Households?op=loco")
+#     except HTTPClientError as e:
+#         message = e.response.body.decode('utf-8') if e.response else "<none>"
+#         print(f"Error on bad op, code: {e.code} msg: {message}")
+#     else:
+#         print(f"do_bad_op: resp: {response.body.decode('utf-8')}")
 
 
 def do_drop():
     http_client = HTTPClient()
     try:
         request = HTTPRequest(
-            url="http://localhost:8000/api/Households?op=drop",
+            url="http://localhost:8000/api/Households",
             method="DELETE"
         )
         response = http_client.fetch(request)
-    except Exception as e:
-        print("Error: %s" % e)
+    except HTTPClientError as e:
+        message = e.response.body.decode('utf-8') if e.response else "<none>"
+        print(f"Error on drop, code: {e.code} msg: {message}")
     else:
         print(f"resp from drop: \"{response.body.decode('utf-8')}\"")
 
@@ -71,7 +72,7 @@ def do_create_bad_json():
     http_client = HTTPClient()
     try:
         request = HTTPRequest(
-            url="http://localhost:8000/api/Households?op=create",
+            url="http://localhost:8000/api/Households",
             method="POST",
             headers={"Content-Type": "application/json; charset=UTF-8"},
             body='{"bad json"}'
@@ -93,7 +94,7 @@ def do_create():
         payload = household.clean_json
         # pp.pprint(payload)
         request = HTTPRequest(
-            url="http://localhost:8000/api/Households?op=create",
+            url="http://localhost:8000/api/Households",
             method="POST",
             headers={"Content-Type": "application/json; charset=UTF-8"},
             body=payload
@@ -109,7 +110,6 @@ def do_create():
 
 def main():
     do_bad_url()
-    do_bad_op()
     do_drop()
     do_create_bad_json()
     household_id = do_create()

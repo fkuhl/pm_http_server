@@ -1,59 +1,56 @@
-# pm-http-server
+# pm_http_server
+HTTP server for Peri Meleon. Mediates all access to MongoDB.
 
-Attempt at an HTTP server for Peri Meleon, using SwiftNIO and a bit of Vapor.
+##Install
+git clone git@github.com:fkuhl/pm_http_server
+cd pm_http_server
+python3 -m pip install -r requirements.txt
 
-Server expects basic HTTP messages with JSON bodies.
-The HTTP method is ignored.
-The URL specifies the operation.
-The operand, if any, is in JSON; operand varies by operation.
+(Note also pm_data_types module must be in PYTHONPATH.)
 
-The response is JSON. If the HTTP status return is anything but OK, the response takes the form:
-{"error": <string from bowels of the applicatiopn>, "response": <string that might tell you something>  }
-If the HTTP status is OK, the response will be JSON whose form depends on the operation.
+##Run
+python3 ./src/pm_http_server.py
 
-## URL = "/Members/create"
-Cannot create separate Member, only as part of a Household.
-response is BADREQUEST
+##Household CRUD operations
+URL for all Household ops: /api/Households.
+Operations are determined by HTTP method and query parameter(s).
+Input data is in request body, UTF-8 encoded JSON.
+Return status is indicated by HTTP status.
+Return data is in response bdy, UTF-8 encoded, usually JSON.
 
-## URL = "/Members/read"
-query parameter: id. So URL looks like "/Members/read?id=123456789abcdef"
-method GET
-request body is empty
-response is Member or  NOTFOUND
+###Create Household.
+Method: POST.
+Parameters: none.
+Data: new Household (id attr ignored) as JSON.
+Return: stringified Mongo id (not JSON!).
 
-## URL = "/Members/readAll"
-method GET
-request body is empty
-response is (possibly empty) array of Member
+###Read specified Household.
+Method: GET.
+Parameters: id=stringified Mongo id
+Data: none.
+Return: if OK, Household as JSON; else NOTFOUND.
 
-## URL = "/Members/update"
-method POST
-request: Member
-response is NOTFOUND if ID not found; or OK and updated Member
-*NOTE:* The update is not allowed to change the Member's Household!
+###Read all Households.
+Method: GET.
+Parameters: scope=all|active. (An active Household is one whose head is active.)
+Data: none.
+Return: If OK, array of Households as JSON.
 
-## URL = "api/Households?op=create"
-method POST
-request: HouseholdDocument object with blank id
-response: new document ID
+###Update Household.
+Method: PUT.
+Parameters: none.
+Data: Updated Household, including Mongo id, as JSON.
+Return: OK.
 
-## URL = "/Households/read"
-query parameter: id. So URL looks like "/Members/read?id=123456789abcdef"
-method GET
-request body is empty
-response is HouseholdDocument or  NOTFOUND
+###Delete Household.
+Method: DELETE.
+Parameter: id=stringified Mongo id
+Data: none.
+Return: OK or NOTFOUND.
 
-## URL = "/Households/readAll"
-method GET
-request body is empty
-response is (possibly empty) array of HouseholdDocument
+###Drop Households. (Used for testing.)
+Method: DELETE.
+Parameters: none.
+Data: None.
+Return: OK.
 
-## URL = "/Households/update"
-method POST
-request: HouseholdDocument
-response is NOTFOUND if ID not found; or OK or updated HouseholdDocument
-
-## URL = "api/Households?op=drop"
-method DELETE
-request: empty (ignored)
-response is OK
