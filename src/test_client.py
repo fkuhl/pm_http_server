@@ -154,6 +154,24 @@ def do_read(id_to_read):
         print(f"resp from read: \"{h.head.full_name}\"")
 
 
+def do_update(id_to_update, household):
+    http_client = HTTPClient()
+    try:
+        request = HTTPRequest(
+            url=f"http://localhost:8000/api/Households?id={id_to_update}",
+            method="PUT",
+            headers={"Content-Type": "application/json; charset=UTF-8"},
+            body=household.clean_json
+        )
+        response = http_client.fetch(request)
+    except HTTPClientError as e:
+        message = e.response.body.decode('utf-8') if e.response else "<none>"
+        print(f"Error on update id: {id}, code: {e.code} msg: {message}")
+    else:
+        resp = response.body.decode('utf-8')
+        print(f"resp from update: \"{resp}\"")
+
+
 def do_delete(id_to_delete):
     http_client = HTTPClient()
     try:
@@ -184,6 +202,9 @@ def main():
     do_delete(hh2_id)  # succeeds silently
     do_read_all("all")  # Hornswoggle only
     do_delete(hh2_id)  # 404 not found
+    hh1.head.nickname = "Horry"
+    do_update(hh1_id, hh1)  # update
+    do_read(hh1_id)  # hh1 head now has nickname
 
 
 if __name__ == '__main__':

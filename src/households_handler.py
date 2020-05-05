@@ -32,7 +32,8 @@ class HouseholdsHandler(BaseHandler):
 
     def put(self):
         try:
-            self.handle_update()
+            id_to_update = self.get_query_argument("id")
+            self.handle_update(id_to_update)
         except Exception as e:
             self.logger.error(f"{self.req_tag}: exc: {e}", exc_info=True)
             self.write_error(500, message=f"exc: {e}")
@@ -116,11 +117,26 @@ class HouseholdsHandler(BaseHandler):
         self.set_status(200)
         self.write(json.dumps(household_json_objs))
 
-    def handle_update(self):
+    def handle_update(self, id_to_update):
         """Update Household with new value provided."""
-        # Decode new value from request body
-        # Return status indicates success
-        pass
+        clean_dict = self.request.body.decode('utf-8')
+        household_json = json.loads(clean_dict)
+        # pp.pprint(household_json)
+        household = Household.make_from_clean_dict(household_json)
+        mongo_dict = household.mongoize()
+        collection = self.application.mongo[db_name][collection_name]
+        filter = {'_id': ObjectId(id_to_update)}
+        result = collection.replace_one(filter, mongo_dict, upsert=False)
+        if result.matched_count != 1:
+            self.set_status(404)
+            self.write("")
+            return
+        if result.modified_count != 1:
+            self.set_status(400)  # not sure why would fail to modify
+            self.write("")
+            return
+        self.set_status(200)
+        self.write("")
 
     def handle_drop(self):
         """Drop entire Households collection. Not recommended"""
