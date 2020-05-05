@@ -40,7 +40,7 @@ Return data is in response bdy, UTF-8 encoded, usually JSON.
 - Method: PUT.
 - Parameters: none.
 - Data: Updated Household, including Mongo id, as JSON.
-- Return: OK.
+- Return: OK, NOTFOUND, or BAD_REQUEST.
 
 ### Delete Household.
 - Method: DELETE.
