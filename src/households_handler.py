@@ -2,6 +2,7 @@ import tornado.web
 from members_handler import BaseHandler
 import logging
 from bson import json_util
+from bson.objectid import ObjectId
 import json
 import uuid
 import pprint
@@ -21,8 +22,8 @@ class HouseholdsHandler(BaseHandler):
 
     def get(self):
         try:
-            id = self.get_query_argument("id")
-            self.handle_read(id)
+            id_to_read = self.get_query_argument("id")
+            self.handle_read(id_to_read)
         except tornado.web.MissingArgumentError:
             self.handle_read_all()
         except Exception as e:
@@ -45,8 +46,8 @@ class HouseholdsHandler(BaseHandler):
 
     def delete(self):
         try:
-            id = self.get_query_argument("id")
-            self.handle_delete(id)
+            id_to_delete = self.get_query_argument("id")
+            self.handle_delete(id_to_delete)
         except tornado.web.MissingArgumentError:
             self.handle_drop()
         except Exception as e:
@@ -78,9 +79,18 @@ class HouseholdsHandler(BaseHandler):
         self.write(id_as_str)
         return
 
-    def handle_read(self, id):
+    def handle_read(self, id_to_read):
         """Read Household with id given as query parameter."""
-        pass
+        collection = self.application.mongo[db_name][collection_name]
+        result = collection.find_one({'_id': ObjectId(id_to_read)})
+        if result is not None:
+            self.set_status(200)
+            household_obj = Household.make_from_mongo_dict(result)
+            household_json = household_obj.clean_json
+            self.write(household_json)
+        else:
+            self.set_status(404)
+            self.write("")
 
     def handle_read_all(self):
         """Read all or only active Households, depending on 'scope' parameter."""
@@ -122,6 +132,13 @@ class HouseholdsHandler(BaseHandler):
         self.write("")
         return
 
-    def handle_delete(self, id):
+    def handle_delete(self, id_to_delete):
         """Delete Household specified by id."""
-        pass
+        collection = self.application.mongo[db_name][collection_name]
+        result = collection.delete_one({'_id': ObjectId(id_to_delete)})
+        if result.deleted_count == 1:
+            self.set_status(200)
+            self.write("")
+        else:
+            self.set_status(404)
+            self.write("")

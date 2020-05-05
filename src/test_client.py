@@ -136,13 +136,31 @@ def do_read_all(scope):
             print(f"    head: {h.head.full_name}")
 
 
-def do_delete(id):
+def do_read(id_to_read):
     http_client = HTTPClient()
     try:
         request = HTTPRequest(
-            url="http://localhost:8000/api/Households$id={id}",
+            url=f"http://localhost:8000/api/Households?id={id_to_read}",
+            method="GET",
+            headers={"Content-Type": "application/json; charset=UTF-8"}
+        )
+        response = http_client.fetch(request)
+    except HTTPClientError as e:
+        message = e.response.body.decode('utf-8') if e.response else "<none>"
+        print(f"Error on read id: {id}, code: {e.code} msg: {message}")
+    else:
+        resp = response.body.decode('utf-8')
+        h = Household.make_from_clean_dict(json.loads(resp))
+        print(f"resp from read: \"{h.head.full_name}\"")
+
+
+def do_delete(id_to_delete):
+    http_client = HTTPClient()
+    try:
+        request = HTTPRequest(
+            url=f"http://localhost:8000/api/Households?id={id_to_delete}",
             method="DELETE",
-            headers={"Content-Type": "application/json; charset=UTF-8"},
+            headers={"Content-Type": "application/json; charset=UTF-8"}
         )
         response = http_client.fetch(request)
     except HTTPClientError as e:
@@ -154,16 +172,18 @@ def do_delete(id):
 
 
 def main():
-    do_bad_url()
-    do_drop()
-    do_create_bad_json()
-    hh1_id = do_create(hh1)
-    hh2_id = do_create(hh2)
-    do_read_all("invalid")
-    do_read_all("all")
-    do_read_all("active")
-    # do_delete(hh2_id)
-    # do_read_all("all")
+    do_bad_url()  # 405 error
+    do_drop()  # succeeds silently
+    do_create_bad_json()  # 400 with decode error
+    hh1_id = do_create(hh1)  # returns id
+    hh2_id = do_create(hh2)  # returns id
+    do_read(hh1_id)         # returns Hornswoggle
+    do_read_all("invalid")  # 400 invalid scope
+    do_read_all("all")  # Hornswoggle and Frantz households
+    do_read_all("active")  # Hornswoggle only
+    do_delete(hh2_id)  # succeeds silently
+    do_read_all("all")  # Hornswoggle only
+    do_delete(hh2_id)  # 404 not found
 
 
 if __name__ == '__main__':
