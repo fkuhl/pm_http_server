@@ -87,7 +87,7 @@ class HouseholdsHandler(BaseHandler):
         if result is not None:
             self.set_status(200)
             household_obj = Household.make_from_mongo_dict(result)
-            household_json = household_obj.clean_json
+            household_json = household_obj.clean_json_string
             self.write(household_json)
         else:
             self.set_status(404)
@@ -105,7 +105,7 @@ class HouseholdsHandler(BaseHandler):
             self.set_status(400)
             self.write(err_msg)
             return
-        self.logger.debug(f"handle_read_all scope: {scope}")
+        # self.logger.debug(f"handle_read_all scope: {scope}")
         collection = self.application.mongo[db_name][collection_name]
         query = {
             "_Household__head._Member__is_active": True} if scope == 'active' else {}
@@ -113,7 +113,8 @@ class HouseholdsHandler(BaseHandler):
         for h in collection.find(query):
             # pp.pprint(h)
             household_obj = Household.make_from_mongo_dict(h)
-            household_json_objs.append(json.loads(household_obj.clean_json))
+            household_json_objs.append(
+                json.loads(household_obj.clean_json_string))
         self.set_status(200)
         self.write(json.dumps(household_json_objs))
 

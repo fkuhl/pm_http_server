@@ -16,7 +16,7 @@ URL for all Household ops: /api/Households.
 Operations are determined by HTTP method and query parameter(s).
 Input data is in request body, UTF-8 encoded JSON.
 Return status is indicated by HTTP status.
-Return data is in response bdy, UTF-8 encoded, usually JSON.
+Return data is in response body, UTF-8 encoded, usually JSON.
 
 ### Create Household.
 - Method: POST.
@@ -54,3 +54,15 @@ Return data is in response bdy, UTF-8 encoded, usually JSON.
 - Data: None.
 - Return: OK.
 
+## Member CRUD operations
+URL for all Household ops: /api/Members.
+Operations are determined by HTTP method and query parameter(s).
+Input data is in request body, UTF-8 encoded JSON.
+Return status is indicated by HTTP status.
+Return data is in response body, UTF-8 encoded, usually JSON.
+
+### Read all Members.
+- Method: GET.
+- Parameters: scope=all|active.
+- Data: none.
+- Return: If OK, array of Members as JSON.

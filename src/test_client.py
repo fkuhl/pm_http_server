@@ -94,7 +94,7 @@ def do_create_bad_json():
 def do_create(household):
     http_client = HTTPClient()
     try:
-        payload = household.clean_json
+        payload = household.clean_json_string
         # pp.pprint(payload)
         request = HTTPRequest(
             url="http://localhost:8000/api/Households",
@@ -161,7 +161,7 @@ def do_update(id_to_update, household):
             url=f"http://localhost:8000/api/Households?id={id_to_update}",
             method="PUT",
             headers={"Content-Type": "application/json; charset=UTF-8"},
-            body=household.clean_json
+            body=household.clean_json_string
         )
         response = http_client.fetch(request)
     except HTTPClientError as e:
@@ -189,6 +189,29 @@ def do_delete(id_to_delete):
         print(f"resp from delete: \"{resp}\"")
 
 
+def do_read_all_members(scope):
+    http_client = HTTPClient()
+    try:
+        request = HTTPRequest(
+            url=f"http://localhost:8000/api/Members?scope={scope}",
+            method="GET",
+            headers={"Content-Type": "application/json; charset=UTF-8"},
+            body=None
+        )
+        response = http_client.fetch(request)
+    except HTTPClientError as e:
+        message = e.response.body.decode('utf-8') if e.response else "<none>"
+        print(
+            f"Error on read_all_members with scope {scope}, code: {e.code} msg: {message}")
+    else:
+        members_json_objs = json.loads(response.body.decode('utf-8'))
+        # pp.pprint(members_json_objs)
+        members = [Member.make_from_clean_dict(m) for m in members_json_objs]
+        print(f"resp from read_all_members with scope {scope}:")
+        for m in members:
+            print(f"    {m.full_name}")
+
+
 def main():
     do_bad_url()  # 405 error
     do_drop()  # succeeds silently
@@ -205,6 +228,9 @@ def main():
     hh1.head.nickname = "Horry"
     do_update(hh1_id, hh1)  # update
     do_read(hh1_id)  # hh1 head now has nickname
+    hh2_id = do_create(hh2)  # restire hh2 to db
+    do_read_all_members("all")  # 2 Hornswoggles, 2 Fritzes
+    do_read_all_members("active")  # 2 Hornswoggles
 
 
 if __name__ == '__main__':
