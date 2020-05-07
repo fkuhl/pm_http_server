@@ -28,22 +28,31 @@ class HouseholdsHandler(BaseHandler):
             self.handle_read_all()
         except Exception as e:
             self.logger.error(f"{self.req_tag}: exc: {e}", exc_info=True)
-            self.write_error(500, message=f"exc: {e}")
+            self.set_status(500)
+            self.write(f"exc: {e}")
 
     def put(self):
         try:
             id_to_update = self.get_query_argument("id")
             self.handle_update(id_to_update)
+        except tornado.web.MissingArgumentError:
+            self.logger.error(
+                f"{self.req_tag}: missing id argument", exc_info=True)
+            self.set_status(400)
+            self.write("missing id argument")
+            return
         except Exception as e:
             self.logger.error(f"{self.req_tag}: exc: {e}", exc_info=True)
-            self.write_error(500, message=f"exc: {e}")
+            self.set_status(500)
+            self.write(f"exc: {e}")
 
     def post(self):
         try:
             self.handle_create()
         except Exception as e:
             self.logger.error(f"{self.req_tag}: exc: {e}", exc_info=True)
-            self.write_error(500, message=f"exc: {e}")
+            self.set_status(500)
+            self.write(f"exc: {e}")
 
     def delete(self):
         try:
@@ -53,7 +62,8 @@ class HouseholdsHandler(BaseHandler):
             self.handle_drop()
         except Exception as e:
             self.logger.error(f"{self.req_tag}: exc: {e}", exc_info=True)
-            self.write_error(500, message=f"exc: {e}")
+            self.set_status(500)
+            self.write(f"exc: {e}")
 
     def handle_create(self):
         """Create new Household from request body. Return new id."""

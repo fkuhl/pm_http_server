@@ -38,7 +38,7 @@ Return data is in response body, UTF-8 encoded, usually JSON.
 
 ### Update Household.
 - Method: PUT.
-- Parameters: none.
+- Parameters: id=stringified Mongo id.
 - Data: Updated Household, including Mongo id, as JSON.
 - Return: OK, NOTFOUND, or BAD_REQUEST.
 
