@@ -28,7 +28,7 @@ class PMServer(tornado.web.Application):
 
     def __init__(self, handlers, **settings):
         log.info(settings)
-        self.mongo = MongoClient(host=settings['url'], port=settings['port'])
+        self.mongo = MongoClient(host=settings['host'], port=settings['port'])
         super(PMServer, self).__init__(handlers, **settings)
 
     def signal_handler(self, signum, frame):
@@ -41,7 +41,7 @@ class PMServer(tornado.web.Application):
             log.info('Server exited')
 
 
-def mk_app(prefix=''):
+def mk_app(prefix, db_host):
     if prefix:
         path = '/' + prefix + '/(.)'
     else:
@@ -53,15 +53,15 @@ def mk_app(prefix=''):
     ]
     settings = dict(
         debug=True,
-        url='localhost',
+        host= db_host,
         port=27017,
         default_handler_class=DefaultHandler)
     application = PMServer(handlers, **settings)
     return application
 
 
-def start_server(prefix='', port=8000):
-    app = mk_app(prefix)
+def start_server(prefix, port, db_host):
+    app = mk_app(prefix, db_host)
     signal.signal(signal.SIGINT, app.signal_handler)
     app.listen(port)
     log.info('Server listening on port %d' % port)
@@ -78,13 +78,15 @@ def parse_args(args=None):
                         help="A prefix to add to the location from which pages are served")
     parser.add_argument('-d', '--dir', default='.',
                         help="Directory from which to serve files")
+    parser.add_argument('-db', '--db_host', default='localhost',
+                        help="Hostname of database server")
     return parser.parse_args()
 
 
 def main(args=None):
     args = parse_args(args)
     os.chdir(args.dir)
-    start_server(prefix=args.prefix, port=args.port)
+    start_server(prefix=args.prefix, port=args.port, db_host=args.db_host)
 
 
 if __name__ == '__main__':
