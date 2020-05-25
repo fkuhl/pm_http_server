@@ -43,6 +43,12 @@ hh2.head = mem3
 hh2.spouse = mem4
 hh2.address = addr
 
+mem5 = Member()
+mem5.family_name = "Peripatetic"
+mem5.given_name = "Pam"
+mem5.status = MemberStatus.COMMUNING
+mem5.date_of_birth = "1997-01-01"
+
 
 def do_bad_url():
     http_client = HTTPClient()
@@ -152,6 +158,7 @@ def do_read(id_to_read):
         resp = response.body.decode('utf-8')
         h = Household.make_from_clean_dict(json.loads(resp))
         print(f"resp from read: \"{h.head.full_name}\"")
+        return h
 
 
 def do_update(id_to_update, household):
@@ -212,6 +219,36 @@ def do_read_all_members(scope):
             print(f"    {m.full_name}")
 
 
+def do_move_member(old_household, member_id, new_household, relation):
+    http_client = HTTPClient()
+    try:
+        params = f"op=move_member&old_household={old_household}&member_id={member_id}&new_household={new_household}&relation={relation}"
+        request = HTTPRequest(
+            url=f"http://localhost:8000/api/Transaction?{params}",
+            method="PUT",
+            headers={"Content-Type": "application/json; charset=UTF-8"},
+            body=""
+        )
+        response = http_client.fetch(request)
+    except HTTPClientError as e:
+        message = e.response.body.decode('utf-8') if e.response else "<none>"
+        print(f"Error on move_member: code: {e.code} msg: {message}")
+    else:
+        resp = response.body.decode('utf-8')
+        print(f"resp from move_member: \"{resp}\"")
+
+
+def print_members(household):
+    if household is None:
+        print("no household]")
+        return
+    spouse_rep = "none" if (
+        household.spouse is None) else household.spouse.full_name
+    print(f"head: {household.head.full_name} spouse: {spouse_rep} others:")
+    for other in household.others:
+        print(f"  {other.full_name}")
+
+
 def main():
     do_bad_url()  # 405 error
     do_drop()  # succeeds silently
@@ -228,9 +265,20 @@ def main():
     hh1.head.nickname = "Horry"
     do_update(hh1_id, hh1)  # update
     do_read(hh1_id)  # hh1 head now has nickname
-    hh2_id = do_create(hh2)  # restire hh2 to db
+    hh2_id = do_create(hh2)  # restore hh2 to db
     do_read_all_members("all")  # 2 Hornswoggles, 2 Fritzes
     do_read_all_members("active")  # 2 Hornswoggles
+
+    hh1.others.append(mem5)  # add Pam to hh1
+    do_update(hh1_id, hh1)  # update
+    do_read(hh1_id)  # Pam now in Hornswoggles
+    # fail: Franz has a spouse
+    do_move_member(hh1_id, mem5.id, hh2_id, "SPOUSE")
+    print_members(do_read(hh1_id))  # show transaction failed, no change
+    print_members(do_read(hh2_id))
+    do_move_member(hh1_id, mem5.id, hh2_id, "OTHER")  # move Pam to Frantzes
+    print_members(do_read(hh1_id))  # Pam not in Hornswoggles
+    print_members(do_read(hh2_id))  # Pam in Frantzes
 
 
 if __name__ == '__main__':

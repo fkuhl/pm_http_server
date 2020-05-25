@@ -66,3 +66,15 @@ Return data is in response body, UTF-8 encoded, usually JSON.
 - Parameters: scope=all|active.
 - Data: none.
 - Return: If OK, array of Members as JSON.
+
+### Transaction: move Member.
+- URL: /api/Transaction
+- Method: PUT.
+- Parameters:
+    - op='move_member'
+    - old_household: stringified Mongo ID of Member's previous household.
+    - member_id: id of Member to move
+    - new_household: Mongo ID of Household to add Member to.
+    - relation='SPOUSE'|'OTHER' whether to add to new Household as spouse or other.
+- Data: none.
+- Return: OK, NOTFOUND, or BAD_REQUEST.

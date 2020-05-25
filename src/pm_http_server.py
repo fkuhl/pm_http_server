@@ -1,5 +1,6 @@
 from households_handler import HouseholdsHandler
 from members_handler import MembersHandler
+from transaction_handler import TransactionHandler
 from default_handler import DefaultHandler
 from file_handler import FileHandler
 import os
@@ -49,11 +50,12 @@ def mk_app(prefix, db_host):
     handlers = [
         (path, FileHandler, {"path": os.getcwd()}),
         (r"/api/Members", MembersHandler),
-        (r"/api/Households", HouseholdsHandler)
+        (r"/api/Households", HouseholdsHandler),
+        (r"/api/Transaction", TransactionHandler)
     ]
     settings = dict(
         debug=True,
-        host= db_host,
+        host=db_host,
         port=27017,
         default_handler_class=DefaultHandler)
     application = PMServer(handlers, **settings)
